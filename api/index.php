@@ -28,7 +28,7 @@ $resPais = mysqli_query($link, $sqlPais);
 
     <nav class="bg-blue-900 p-4 shadow-lg text-white sticky top-0 z-50">
         <div class="container mx-auto flex justify-between items-center">
-            <h1 class="text-2xl font-bold">📰 Agregador de Noticias</h1>
+            <h1 class="text-2xl font-bold"> Agregador de Noticias</h1>
             <div class="text-sm">PHP + MySQL + Tailwind</div>
         </div>
     </nav>
@@ -56,7 +56,7 @@ $resPais = mysqli_query($link, $sqlPais);
                                 </h3>
 
                                 <p class="text-gray-400 text-sm mt-1 mb-3">
-                                    📅 <?php echo date("d/m/Y", strtotime($row['fPubli'])); ?>
+                                     <?php echo date("d/m/Y", strtotime($row['fPubli'])); ?>
                                 </p>
 
                                 <p class="text-gray-600 text-sm">
@@ -101,7 +101,7 @@ $resPais = mysqli_query($link, $sqlPais);
                                 </h3>
 
                                 <p class="text-gray-400 text-sm mt-1 mb-3">
-                                    📅 <?php echo date("d/m/Y", strtotime($row['fPubli'])); ?>
+                                    <?php echo date("d/m/Y", strtotime($row['fPubli'])); ?>
                                 </p>
 
                                 <p class="text-gray-600 text-sm">
