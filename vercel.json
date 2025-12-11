@@ -1,9 +1,21 @@
 {
   "functions": {
-    "api/*.php": { "runtime": "vercel-php@0.7.1" }
+    "api/*.php": {
+      "runtime": "vercel-php@0.7.1"
+    }
   },
   "routes": [
-    { "src": "/instalar", "dest": "/api/instalar.php" },
-    { "src": "/(.*)", "dest": "/api/index.php" }
+    {
+      "src": "/instalar",
+      "dest": "/api/instalar.php"
+    },
+    {
+      "src": "/arreglar",
+      "dest": "/api/arreglar.php"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/api/index.php"
+    }
   ]
 }
