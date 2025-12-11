@@ -7,11 +7,11 @@ $database = getenv('DB_NAME');
 $port = getenv('DB_PORT');
 
 if (!$host) {
-    $host = "localhost";
-    $user = "root";
+    $host = "mysql-periodicos-carlosalmendras66-4637.b.aivencloud.com";
+    $user = "avnadmin";
     $password = "";
-    $database = "periodicos";
-    $port = 3306;
+    $database = "defaultdb";
+    $port = 19335;
 }
 
 $link = mysqli_init();
