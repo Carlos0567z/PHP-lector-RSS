@@ -1,182 +1,133 @@
-<!DOCTYPE html>
-<!--
-To change this license header, choose License Headers in Project Properties.
-To change this template file, choose Tools | Templates
-and open the template in the editor.
--->
-<html>
+<?php
+require_once __DIR__ . '/conexionBBDD.php';
 
+function limpiarTexto($texto, $limite = 150) {
+    $textoLimpio = strip_tags($texto);
+    if (strlen($textoLimpio) > $limite) {
+        $textoLimpio = substr($textoLimpio, 0, $limite) . "...";
+    }
+    return $textoLimpio;
+}
+
+$sqlMundo = "SELECT * FROM elmundo ORDER BY fPubli DESC, cod DESC";
+$resMundo = mysqli_query($link, $sqlMundo);
+
+$sqlPais = "SELECT * FROM elpais ORDER BY fPubli DESC, cod DESC";
+$resPais = mysqli_query($link, $sqlPais);
+?>
+
+<!DOCTYPE html>
+<html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Noticias RSS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
+<body class="bg-gray-100 font-sans leading-normal tracking-normal">
 
-<body>
-    <form action="index.php">
-        <fieldset>
-            <legend>FILTRO</legend>
-            <label>PERIODICO : </label>
-            <select type="selector" name="periodicos">
-                <option name="elpais">El Pais</option>
-                <option name="elmundo">El Mundo</option>
-            </select>
-            <label>CATEGORIA : </label>
-            <select type="selector" name="categoria" value="">
-                <option name=""></option>
-                <option name="Política">Política</option>
-                <option name="Deportes">Deportes</option>
-                <option name="Ciencia">Ciencia</option>
-                <option name="España">España</option>
-                <option name="Economía">Economía</option>
-                <option name="Música">Música</option>
-                <option name="Cine">Cine</option>
-                <option name="Europa">Europa</option>
-                <option name="Justicia">Justicia</option>
-            </select>
-            <label>FECHA : </label>
-            <input type="date" name="fecha" value=""></input>
-            <label style="margin-left: 5vw;">AMPLIAR FILTRO (la descripción contenga la palabra) : </label>
-            <input type="text" name="buscar" value=""></input>
-            <input type="submit" name="filtrar">
-        </fieldset>
-    </form>
+    <nav class="bg-blue-900 p-4 shadow-lg text-white sticky top-0 z-50">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold">📰 Agregador de Noticias</h1>
+            <div class="text-sm">PHP + MySQL + Tailwind</div>
+        </div>
+    </nav>
 
+    <div class="container mx-auto px-4 py-8">
 
+        <div class="mb-12">
+            <h2 class="text-3xl font-bold text-blue-800 mb-6 border-b-4 border-blue-500 inline-block pb-2">
+                El Mundo
+            </h2>
+            
+            <?php if (mysqli_num_rows($resMundo) > 0): ?>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <?php while($row = mysqli_fetch_assoc($resMundo)): ?>
+                        <div class="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden flex flex-col h-full">
+                            <div class="p-5 flex-grow">
+                                <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">
+                                    <?php echo htmlspecialchars($row['categoria'] ?: '[General]'); ?>
+                                </span>
+                                
+                                <h3 class="mt-3 text-lg font-bold text-gray-900 leading-tight">
+                                    <a href="<?php echo $row['link']; ?>" target="_blank" class="hover:text-blue-600">
+                                        <?php echo $row['titulo']; ?>
+                                    </a>
+                                </h3>
 
+                                <p class="text-gray-400 text-sm mt-1 mb-3">
+                                    📅 <?php echo date("d/m/Y", strtotime($row['fPubli'])); ?>
+                                </p>
 
+                                <p class="text-gray-600 text-sm">
+                                    <?php echo limpiarTexto($row['descripcion']); ?>
+                                </p>
+                            </div>
 
-    <?php
-
-    require_once __DIR__ . '/RSSElPais.php';
-    require_once __DIR__ . '/RSSElMundo.php';
-    require_once __DIR__ . '/conexionBBDD.php';
-
-    function filtros($sql, $link)
-    {
-        $filtrar = mysqli_query($link, $sql);
-        while ($arrayFiltro = mysqli_fetch_array($filtrar)) {
-
-            echo "<tr>";
-            echo "<th style='border: 1px #E4CCE8 solid;'>" . $arrayFiltro['titulo'] . "</th>";
-            echo "<th style='border: 1px #E4CCE8 solid;'>" . $arrayFiltro['contenido'] . "</th>";
-            echo "<th style='border: 1px #E4CCE8 solid;'>" . $arrayFiltro['descripcion'] . "</th>";
-            echo "<th style='border: 1px #E4CCE8 solid;'>" . $arrayFiltro['categoria'] . "</th>";
-            echo "<th style='border: 1px #E4CCE8 solid;'>" . $arrayFiltro['link'] . "</th>";
-            $fecha = date_create($arrayFiltro['fPubli']);
-            $fechaConversion = date_format($fecha, 'd-M-Y');
-            //$fechaConversion=date('j-n-Y',srtotime($arrayFiltro['fPubli']));
-            echo "<th style='border: 1px #E4CCE8 solid;'>" . $fechaConversion . "</th>";
-            echo "</tr>";
-        }
-    }
-
-    require_once "conexionBBDD.php";
-
-    if (mysqli_connect_error()) {
-        printf("Conexión fallida");
-    } else {
-
-        echo "<table style='border: 5px #E4CCE8 solid;'>";
-        echo "<tr><th><p style='color: #66E9D9;'>TITULO</p ></th><th><p  style='color: #66E9D9;'>CONTENIDO</p ></th><th><p  style='color: #66E9D9;'>DESCRIPCIÓN</p ></th><th><p  style='color: #66E9D9;'>CATEGORÍA</p ></th><th><p  style='color: #66E9D9;'>ENLACE</p ></th><th><p  style='color: #66E9D9;'>FECHA DE PUBLICACIÓN</p ></th></tr>" . "<br>";
+                            <div class="bg-gray-50 px-5 py-3 border-t border-gray-100">
+                                <a href="<?php echo $row['link']; ?>" target="_blank" class="text-blue-600 font-semibold hover:text-blue-800 text-sm uppercase">
+                                    Leer noticia &rarr;
+                                </a>
+                            </div>
+                        </div>
+                    <?php endwhile; ?>
+                </div>
+            <?php else: ?>
+                <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4" role="alert">
+                    <p>No hay noticias de El Mundo guardadas aún.</p>
+                </div>
+            <?php endif; ?>
+        </div>
 
 
+        <div>
+            <h2 class="text-3xl font-bold text-gray-800 mb-6 border-b-4 border-gray-500 inline-block pb-2">
+                El País
+            </h2>
 
+            <?php if (mysqli_num_rows($resPais) > 0): ?>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <?php while($row = mysqli_fetch_assoc($resPais)): ?>
+                        <div class="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden flex flex-col h-full">
+                            <div class="p-5 flex-grow">
+                                <span class="bg-gray-200 text-gray-800 text-xs font-semibold px-2.5 py-0.5 rounded">
+                                    <?php echo htmlspecialchars($row['categoria'] ?: '[General]'); ?>
+                                </span>
+                                
+                                <h3 class="mt-3 text-lg font-bold text-gray-900 leading-tight">
+                                    <a href="<?php echo $row['link']; ?>" target="_blank" class="hover:text-gray-600">
+                                        <?php echo $row['titulo']; ?>
+                                    </a>
+                                </h3>
 
-        if (isset($_REQUEST['filtrar'])) {
+                                <p class="text-gray-400 text-sm mt-1 mb-3">
+                                    📅 <?php echo date("d/m/Y", strtotime($row['fPubli'])); ?>
+                                </p>
 
-            $periodicos = str_replace(' ', '', $_REQUEST['periodicos']);
-            $periodicosMin = strtolower($periodicos);
+                                <p class="text-gray-600 text-sm">
+                                    <?php echo limpiarTexto($row['descripcion']); ?>
+                                </p>
+                            </div>
+                            <div class="bg-gray-50 px-5 py-3 border-t border-gray-100">
+                                <a href="<?php echo $row['link']; ?>" target="_blank" class="text-gray-700 font-semibold hover:text-black text-sm uppercase">
+                                    Leer noticia &rarr;
+                                </a>
+                            </div>
+                        </div>
+                    <?php endwhile; ?>
+                </div>
+            <?php else: ?>
+                <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4" role="alert">
+                    <p>No hay noticias de El País guardadas aún.</p>
+                </div>
+            <?php endif; ?>
+        </div>
 
+    </div>
 
-            $cat = $_REQUEST['categoria'];
-            $f = $_REQUEST['fecha'];
-            $palabra = $_REQUEST["buscar"];
-
-            //FILTRO PERIODICO
-
-            if ($cat == "" && $f == "" && $palabra == "") {
-                //$periodicos= str_replace(' ','',$_REQUEST['periodicos']);
-                $sql = "SELECT * FROM " . $periodicosMin . " ORDER BY fPubli desc";
-
-                filtros($sql, $link);
-            }
-
-            //FILTRO CATEGORIA
-
-            if ($cat != "" && $f == "" && $palabra == "") {
-                $sql = "SELECT * FROM " . $periodicosMin . " WHERE categoria LIKE '%$cat%'";
-
-                filtros($sql, $link);
-            }
-
-            //FILTRO FECHA
-
-            if ($cat == "" && $f != "" && $palabra == "") {
-                $sql = "SELECT * FROM " . $periodicosMin . " WHERE fPubli='$f'";
-
-                filtros($sql, $link);
-            }
-
-            //FILTRO CATEGORIA Y FECHA
-            if ($cat != "" && $f != "" && $palabra == "") {
-                $sql = "SELECT * FROM " . $periodicosMin . " WHERE categoria LIKE '%$cat%' and fPubli='$f'";
-
-                filtros($sql, $link);
-            }
-
-            //FILTRO TODO
-
-            if ($cat != "" && $f != "" && $palabra != "") {
-                $sql = "SELECT * FROM " . $periodicosMin . " WHERE descripcion LIKE '%$palabra%' and categoria LIKE '%$cat%' and fPubli='$f'";
-
-                filtros($sql, $link);
-            }
-
-            //FILTRO CATEGORIA PALABRA
-
-            if ($cat != "" && $f == "" && $palabra != "") {
-                //echo $periodicosMin;
-                $sql = "SELECT * FROM " . $periodicosMin . " WHERE descripcion LIKE '%$palabra%' and categoria LIKE '%$cat%'";
-
-                filtros($sql, $link);
-            }
-
-            //FILTRO FECHA Y PALABRA 
-
-            if ($cat == "" && $f != "" && $palabra != "") {
-                //echo $periodicosMin;
-                $sql = "SELECT * FROM " . $periodicosMin . " WHERE descripcion LIKE '%$palabra%' and fPubli='$f'";
-
-                filtros($sql, $link);
-            }
-
-            //FILTRO PALABRA
-
-            if ($palabra != "" && $cat == "" && $f == "") {
-                // echo $periodicosMin;
-                // echo $palabra;
-                $sql = "SELECT * FROM " . $periodicosMin . " WHERE descripcion LIKE '%$palabra%' ";
-
-                filtros($sql, $link);
-            }
-        } else {
-
-            $sql = "SELECT * FROM elpais ORDER BY fPubli desc";
-
-            filtros($sql, $link);
-        }
-    }
-
-
-    echo "</table>";
-
-
-
-
-
-
-    ?>
+    <footer class="bg-white border-t mt-12 py-8 text-center text-gray-500 text-sm">
+        <p>Proyecto RSS con PHP y Tailwind</p>
+    </footer>
 
 </body>
-
 </html>
