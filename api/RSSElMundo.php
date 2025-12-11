@@ -2,97 +2,67 @@
 require_once __DIR__ . '/conexionRSS.php';
 require_once __DIR__ . '/conexionBBDD.php';
 
+$urlFeed = "https://e00-elmundo.uecdn.es/elmundo/rss/espana.xml";
+$sXML = download($urlFeed);
 
-$urls_elmundo = [
-    "https://e00-elmundo.uecdn.es/elmundo/rss/portada.xml",       
-    "https://e00-elmundo.uecdn.es/elmundo/rss/espana.xml",        
-    "https://e00-elmundo.uecdn.es/elmundo/rss/internacional.xml", 
-    "https://e00-elmundo.uecdn.es/elmundo/rss/economia.xml",      
-    "https://e00-elmundo.uecdn.es/elmundo/rss/cultura.xml",       
-    "https://e00-elmundo.uecdn.es/elmundo/rss/deportes.xml"       
-];
+if (strpos($sXML, '<error>') === false && !empty($sXML)) {
+    
+    $oXML = new SimpleXMLElement($sXML);
 
-$misFiltros = [
-    "Política", "Politica", "Gobierno",
-    "Deportes", "Sport", "Fútbol", 
-    "Ciencia", 
-    "España", "Nacional", "Interior", 
-    "Economía", "Economia", "Bolsa",
-    "Música", "Musica", "Concierto", 
-    "Cine", "Película", 
-    "Europa", "Internacional", "Mundo",
-    "Justicia", "Tribunales", 
-    "Cultura", "Sociedad"
-];
+    if ($link) {
+        $misFiltros = [
+            "Política", "Politica", "Gobierno",
+            "Deportes", "Sport", 
+            "España", "Nacional", 
+            "Economía", "Economia", 
+            "Música", "Musica", 
+            "Cine", "Cultura"
+        ];
 
-foreach ($urls_elmundo as $urlFeed) {
+        foreach ($oXML->channel->item as $item) {
+            $categoriaParaGuardar = "";
+            
+            $categoriaParaGuardar .= "[España]";
 
-    $sXML = download($urlFeed);
+            foreach ($item->category as $catXML) {
+                $catLimpia = trim((string)$catXML);
+                foreach ($misFiltros as $filtro) {
+                    if (mb_stripos($catLimpia, $filtro) !== false) {
+                        $etiquetaFinal = ucfirst($filtro); 
+                        if ($etiquetaFinal == "Politica") $etiquetaFinal = "Política";
+                        if ($etiquetaFinal == "Economia") $etiquetaFinal = "Economía";
+                        if ($etiquetaFinal == "Musica") $etiquetaFinal = "Música";
 
-    if (strpos($sXML, '<error>') === false && !empty($sXML)) {
-        
-        $oXML = new SimpleXMLElement($sXML);
-
-        if ($link) {
-            foreach ($oXML->channel->item as $item) {
-                
-                $categoriaParaGuardar = "";
-                
-                foreach ($item->category as $catXML) {
-                    $catLimpia = trim((string)$catXML);
-                    
-                    foreach ($misFiltros as $filtro) {
-                        if (mb_stripos($catLimpia, $filtro) !== false) {
-                            $etiquetaFinal = ucfirst($filtro); 
-                            // Unificar
-                            if ($etiquetaFinal == "Politica") $etiquetaFinal = "Política";
-                            if ($etiquetaFinal == "Musica") $etiquetaFinal = "Música";
-                            if ($etiquetaFinal == "Economia") $etiquetaFinal = "Economía";
-                            
-                            if (strpos($categoriaParaGuardar, "[" . $etiquetaFinal . "]") === false) {
-                                $categoriaParaGuardar .= "[" . $etiquetaFinal . "]";
-                            }
+                        if (strpos($categoriaParaGuardar, "[" . $etiquetaFinal . "]") === false) {
+                            $categoriaParaGuardar .= "[" . $etiquetaFinal . "]";
                         }
                     }
                 }
+            }
 
-                if ($categoriaParaGuardar == "") {
-                    if (strpos($urlFeed, 'deportes') !== false) $categoriaParaGuardar = "[Deportes]";
-                    elseif (strpos($urlFeed, 'economia') !== false) $categoriaParaGuardar = "[Economía]";
-                    elseif (strpos($urlFeed, 'cultura') !== false) $categoriaParaGuardar = "[Cultura]";
-                    elseif (strpos($urlFeed, 'espana') !== false) $categoriaParaGuardar = "[España]";
-                    elseif (strpos($urlFeed, 'internacional') !== false) $categoriaParaGuardar = "[Internacional]";
-                    else $categoriaParaGuardar = "[General]"; 
-                }
+            $enlace = mysqli_real_escape_string($link, $item->link);
 
-                $enlace = mysqli_real_escape_string($link, $item->link);
+            $checkSQL = "SELECT link FROM elmundo WHERE link = '$enlace' LIMIT 1";
+            $checkResult = mysqli_query($link, $checkSQL);
 
-                $checkSQL = "SELECT link FROM elmundo WHERE link = '$enlace' LIMIT 1";
-                $checkResult = mysqli_query($link, $checkSQL);
+            if (mysqli_num_rows($checkResult) == 0) {
+                
+                $media = $item->children("media", true);
+                $descripcionRaw = (isset($media->description)) ? (string)$media->description : (string)$item->description;
+                
+                $fPubli = strtotime($item->pubDate);
+                $new_fPubli = date('Y-m-d', $fPubli);
 
-                if (mysqli_num_rows($checkResult) == 0) {
-                    
-                    $media = $item->children("media", true);
-                    if (isset($media->description) && !empty($media->description)) {
-                        $descripcionRaw = (string)$media->description;
-                    } else {
-                        $descripcionRaw = (string)$item->description;
-                    }
+                $titulo = mysqli_real_escape_string($link, $item->title);
+                $desc   = mysqli_real_escape_string($link, $descripcionRaw);
+                $cat    = mysqli_real_escape_string($link, $categoriaParaGuardar);
+                
+                $guid_contenido = mysqli_real_escape_string($link, $item->guid);
 
-                    $fPubli = strtotime($item->pubDate);
-                    $new_fPubli = date('Y-m-d', $fPubli);
-
-                    $titulo = mysqli_real_escape_string($link, $item->title);
-                    $desc   = mysqli_real_escape_string($link, $descripcionRaw);
-                    $cat    = mysqli_real_escape_string($link, $categoriaParaGuardar);
-                    
-                    $contenido = mysqli_real_escape_string($link, $item->guid);
-
-                    $sql = "INSERT INTO elmundo (cod, titulo, link, descripcion, categoria, fPubli, contenido) 
-                            VALUES (NULL, '$titulo', '$enlace', '$desc', '$cat', '$new_fPubli', '$contenido')";
-                    
-                    mysqli_query($link, $sql);
-                }
+                $sql = "INSERT INTO elmundo (cod, titulo, link, descripcion, categoria, fPubli, contenido) 
+                        VALUES (NULL, '$titulo', '$enlace', '$desc', '$cat', '$new_fPubli', '$guid_contenido')";
+                
+                mysqli_query($link, $sql);
             }
         }
     }

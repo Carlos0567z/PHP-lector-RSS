@@ -2,6 +2,7 @@
 require_once __DIR__ . '/conexionRSS.php';
 require_once __DIR__ . '/conexionBBDD.php';
 
+// URL ÚNICA
 $sXML = download("http://ep00.epimg.net/rss/elpais/portada.xml");
 
 if (strpos($sXML, '<error>') === false && !empty($sXML)) {
@@ -9,12 +10,10 @@ if (strpos($sXML, '<error>') === false && !empty($sXML)) {
     $oXML = new SimpleXMLElement($sXML);
 
     if ($link) {
-        // Filtros
         $misFiltros = [
-            "Política", "Politica", "Deportes", "Sport", "Ciencia", 
-            "España", "Nacional", "Interior", "Economía", "Economia", 
-            "Música", "Musica", "Concierto", "Cine", "Película", 
-            "Europa", "Internacional", "Justicia", "Tribunales", "Cultura"
+            "Política", "Politica", "Deportes", "Ciencia", 
+            "España", "Nacional", "Economía", "Economia", 
+            "Música", "Musica", "Cine", "Cultura", "Europa"
         ];
 
         foreach ($oXML->channel->item as $item) {
@@ -23,10 +22,11 @@ if (strpos($sXML, '<error>') === false && !empty($sXML)) {
 
             foreach ($item->category as $catXML) {
                 $catLimpia = trim((string)$catXML);
-
                 foreach ($misFiltros as $filtro) {
                     if (mb_stripos($catLimpia, $filtro) !== false) {
                         $etiquetaFinal = ucfirst($filtro);
+                        if ($etiquetaFinal == "Politica") $etiquetaFinal = "Política";
+                        
                         if (strpos($categoriaParaGuardar, "[" . $etiquetaFinal . "]") === false) {
                             $categoriaParaGuardar .= "[" . $etiquetaFinal . "]";
                             $encontrado = true;
@@ -54,7 +54,9 @@ if (strpos($sXML, '<error>') === false && !empty($sXML)) {
                     $cont   = mysqli_real_escape_string($link, $encoded);
                     $cat    = mysqli_real_escape_string($link, $categoriaParaGuardar);
 
-                    $sql = "INSERT INTO elpais VALUES(NULL, '$titulo', '$enlace', '$desc', '$cat', '$new_fPubli', '$cont')";
+                    $sql = "INSERT INTO elpais (cod, titulo, link, descripcion, categoria, fPubli, contenido) 
+                            VALUES (NULL, '$titulo', '$enlace', '$desc', '$cat', '$new_fPubli', '$cont')";
+                    
                     mysqli_query($link, $sql);
                 }
             }
