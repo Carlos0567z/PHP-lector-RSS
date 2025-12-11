@@ -3,7 +3,8 @@ require_once __DIR__ . '/conexionRSS.php';
 require_once __DIR__ . '/conexionBBDD.php';
 
 // URL del Feed
-$sXML = download("https://e00-elmundo.uecdn.es/elmundo/rss/espana.xml");
+$urlFeed = "https://e00-elmundo.uecdn.es/elmundo/rss/espana.xml";
+$sXML = download($urlFeed);
 
 if (strpos($sXML, '<error>') === false && !empty($sXML)) {
     
@@ -12,30 +13,42 @@ if (strpos($sXML, '<error>') === false && !empty($sXML)) {
     if ($link) {
         $misFiltros = [
             "Política", "Politica", "Deportes", "Sport", "Ciencia", 
-            "España", "Nacional", "Interior", "Economía", "Economia", 
-            "Música", "Musica", "Concierto", "Cine", "Película", 
-            "Europa", "Internacional", "Justicia", "Tribunales", "Cultura"
+            "Interior", "Economía", "Economia", 
+            "Música", "Musica", "Cine", "Cultura", 
+            "Sucesos", "Tribunales"
         ];
 
         foreach ($oXML->channel->item as $item) {
             $categoriaParaGuardar = "";
-            $encontrado = false;
+            
+            if (strpos($urlFeed, 'espana.xml') !== false) {
+                $categoriaParaGuardar .= "[España]";
+            }
 
             foreach ($item->category as $catXML) {
                 $catLimpia = trim((string)$catXML);
+                
+                if (mb_stripos($catLimpia, "Nacional") !== false) {
+                     if (strpos($categoriaParaGuardar, "[España]") === false) {
+                         $categoriaParaGuardar .= "[España]";
+                     }
+                }
 
                 foreach ($misFiltros as $filtro) {
                     if (mb_stripos($catLimpia, $filtro) !== false) {
                         $etiquetaFinal = ucfirst($filtro); 
+                        if ($etiquetaFinal == "Politica") $etiquetaFinal = "Política";
+                        if ($etiquetaFinal == "Economia") $etiquetaFinal = "Economía";
+
                         if (strpos($categoriaParaGuardar, "[" . $etiquetaFinal . "]") === false) {
                             $categoriaParaGuardar .= "[" . $etiquetaFinal . "]";
-                            $encontrado = true;
                         }
                     }
                 }
             }
 
-            if ($encontrado) {
+            if ($categoriaParaGuardar != "") {
+                
                 $enlace = mysqli_real_escape_string($link, $item->link);
 
                 $checkSQL = "SELECT link FROM elmundo WHERE link = '$enlace' LIMIT 1";
