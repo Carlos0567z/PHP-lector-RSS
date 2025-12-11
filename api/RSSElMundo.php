@@ -2,52 +2,65 @@
 require_once __DIR__ . '/conexionRSS.php';
 require_once __DIR__ . '/conexionBBDD.php';
 
-// URL del Feed
-$urlFeed = "https://e00-elmundo.uecdn.es/elmundo/rss/espana.xml";
-$sXML = download($urlFeed);
+$urls_elmundo = [
+    "https://e00-elmundo.uecdn.es/elmundo/rss/portada.xml",
+    "https://e00-elmundo.uecdn.es/elmundo/rss/espana.xml",
+    "https://e00-elmundo.uecdn.es/elmundo/rss/internacional.xml",
+    "https://e00-elmundo.uecdn.es/elmundo/rss/economia.xml",
+    "https://e00-elmundo.uecdn.es/elmundo/rss/cultura.xml",
+    "https://e00-elmundo.uecdn.es/elmundo/rss/deportes.xml" 
+];
 
-if (strpos($sXML, '<error>') === false && !empty($sXML)) {
-    
-    $oXML = new SimpleXMLElement($sXML);
+$misFiltros = [
+    "Política", "Politica", "Gobierno",
+    "Deportes", "Sport", "Fútbol", 
+    "Ciencia", 
+    "España", "Nacional", "Interior", 
+    "Economía", "Economia", "Bolsa",
+    "Música", "Musica", "Concierto", 
+    "Cine", "Película", 
+    "Europa", "Internacional", "Mundo",
+    "Justicia", "Tribunales", 
+    "Cultura", "Sociedad"
+];
 
-    if ($link) {
-        $misFiltros = [
-            "Política", "Politica", "Deportes", "Sport", "Ciencia", 
-            "Interior", "Economía", "Economia", 
-            "Música", "Musica", "Cine", "Cultura", 
-            "Sucesos", "Tribunales"
-        ];
+foreach ($urls_elmundo as $urlFeed) {
 
-        foreach ($oXML->channel->item as $item) {
-            $categoriaParaGuardar = "";
-            
-            if (strpos($urlFeed, 'espana.xml') !== false) {
-                $categoriaParaGuardar .= "[España]";
-            }
+    $sXML = download($urlFeed);
 
-            foreach ($item->category as $catXML) {
-                $catLimpia = trim((string)$catXML);
+    if (strpos($sXML, '<error>') === false && !empty($sXML)) {
+        
+        $oXML = new SimpleXMLElement($sXML);
+
+        if ($link) {
+            foreach ($oXML->channel->item as $item) {
                 
-                if (mb_stripos($catLimpia, "Nacional") !== false) {
-                     if (strpos($categoriaParaGuardar, "[España]") === false) {
-                         $categoriaParaGuardar .= "[España]";
-                     }
-                }
-
-                foreach ($misFiltros as $filtro) {
-                    if (mb_stripos($catLimpia, $filtro) !== false) {
-                        $etiquetaFinal = ucfirst($filtro); 
-                        if ($etiquetaFinal == "Politica") $etiquetaFinal = "Política";
-                        if ($etiquetaFinal == "Economia") $etiquetaFinal = "Economía";
-
-                        if (strpos($categoriaParaGuardar, "[" . $etiquetaFinal . "]") === false) {
-                            $categoriaParaGuardar .= "[" . $etiquetaFinal . "]";
+                $categoriaParaGuardar = "";
+                
+                foreach ($item->category as $catXML) {
+                    $catLimpia = trim((string)$catXML);
+                    
+                    foreach ($misFiltros as $filtro) {
+                        if (mb_stripos($catLimpia, $filtro) !== false) {
+                            $etiquetaFinal = ucfirst($filtro); 
+                            if ($etiquetaFinal == "Politica") $etiquetaFinal = "Política";
+                            if ($etiquetaFinal == "Musica") $etiquetaFinal = "Música";
+                            
+                            if (strpos($categoriaParaGuardar, "[" . $etiquetaFinal . "]") === false) {
+                                $categoriaParaGuardar .= "[" . $etiquetaFinal . "]";
+                            }
                         }
                     }
                 }
-            }
+                if ($categoriaParaGuardar == "") {
+                    if (strpos($urlFeed, 'deportes') !== false) $categoriaParaGuardar = "[Deportes]";
+                    elseif (strpos($urlFeed, 'economia') !== false) $categoriaParaGuardar = "[Economía]";
+                    elseif (strpos($urlFeed, 'cultura') !== false) $categoriaParaGuardar = "[Cultura]";
+                    elseif (strpos($urlFeed, 'espana') !== false) $categoriaParaGuardar = "[España]";
+                    elseif (strpos($urlFeed, 'internacional') !== false) $categoriaParaGuardar = "[Internacional]";
+                    else $categoriaParaGuardar = "[General]";
+                }
 
-            if ($categoriaParaGuardar != "") {
                 
                 $enlace = mysqli_real_escape_string($link, $item->link);
 
@@ -55,7 +68,6 @@ if (strpos($sXML, '<error>') === false && !empty($sXML)) {
                 $checkResult = mysqli_query($link, $checkSQL);
 
                 if (mysqli_num_rows($checkResult) == 0) {
-                    
                     $media = $item->children("media", true);
                     if (isset($media->description) && !empty($media->description)) {
                         $descripcionRaw = (string)$media->description;
@@ -71,11 +83,15 @@ if (strpos($sXML, '<error>') === false && !empty($sXML)) {
                     $cat    = mysqli_real_escape_string($link, $categoriaParaGuardar);
                     $guid   = mysqli_real_escape_string($link, $item->guid);
 
-                    $sql = "INSERT INTO elmundo VALUES(NULL, '$titulo', '$enlace', '$desc', '$cat', '$new_fPubli', '$guid')";
-                    mysqli_query($link, $sql);
+                    $sql = "INSERT INTO elmundo (cod, titulo, link, descripcion, categoria, fPubli, guid) 
+                            VALUES (NULL, '$titulo', '$enlace', '$desc', '$cat', '$new_fPubli', '$guid')";
+                    
+                    if(mysqli_query($link, $sql)){
+                    }
                 }
             }
         }
     }
 }
+echo "Proceso de El Mundo finalizado.";
 ?>
