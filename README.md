@@ -1,2 +1,2 @@
 # PHP-lector-RSS
-Lector de RSS de noticias
+Lector de RSS de noticiaspfrmmk
