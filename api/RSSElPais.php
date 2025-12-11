@@ -9,17 +9,12 @@ if (strpos($sXML, '<error>') === false && !empty($sXML)) {
     $oXML = new SimpleXMLElement($sXML);
 
     if ($link) {
+        // Filtros
         $misFiltros = [
-            "Política", "Politica", 
-            "Deportes", "Sport",
-            "Ciencia", 
-            "España", "Nacional", "Interior", 
-            "Economía", "Economia", 
-            "Música", "Musica", "Concierto", 
-            "Cine", "Película", 
-            "Europa", "Internacional",
-            "Justicia", "Tribunales", 
-            "Cultura"
+            "Política", "Politica", "Deportes", "Sport", "Ciencia", 
+            "España", "Nacional", "Interior", "Economía", "Economia", 
+            "Música", "Musica", "Concierto", "Cine", "Película", 
+            "Europa", "Internacional", "Justicia", "Tribunales", "Cultura"
         ];
 
         foreach ($oXML->channel->item as $item) {
@@ -43,7 +38,7 @@ if (strpos($sXML, '<error>') === false && !empty($sXML)) {
             if ($encontrado) {
                 $enlace = mysqli_real_escape_string($link, $item->link);
 
-                $checkSQL = "SELECT id FROM elpais WHERE link = '$enlace' LIMIT 1";
+                $checkSQL = "SELECT link FROM elpais WHERE link = '$enlace' LIMIT 1";
                 $checkResult = mysqli_query($link, $checkSQL);
 
                 if (mysqli_num_rows($checkResult) == 0) {
@@ -59,9 +54,7 @@ if (strpos($sXML, '<error>') === false && !empty($sXML)) {
                     $cont   = mysqli_real_escape_string($link, $encoded);
                     $cat    = mysqli_real_escape_string($link, $categoriaParaGuardar);
 
-                    $sql = "INSERT INTO elpais (id, titulo, link, descripcion, categoria, fecha, contenido) 
-                            VALUES (NULL, '$titulo', '$enlace', '$desc', '$cat', '$new_fPubli', '$cont')";
-                    
+                    $sql = "INSERT INTO elpais VALUES(NULL, '$titulo', '$enlace', '$desc', '$cat', '$new_fPubli', '$cont')";
                     mysqli_query($link, $sql);
                 }
             }
