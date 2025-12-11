@@ -19,11 +19,11 @@
     </script>
 </head>
 
-<body class="bg-gray-900 text-gray-200 p-8 font-sans">
+<body class="bg-gray-900 text-gray-200 p-4 font-sans">
     
-    <div class="max-w-7xl mx-auto">
+    <div class="w-full">
         
-        <form action="index.php" class="mb-10">
+        <form action="index.php" class="mb-8">
             <fieldset class="border-2 border-mi-morado rounded-lg p-6 shadow-lg shadow-purple-900/20">
                 <legend class="px-2 text-mi-cyan font-bold text-xl tracking-wider">FILTRO</legend>
                 
@@ -59,15 +59,15 @@
 
                     <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 flex-grow">
                         <label class="font-semibold text-mi-morado sm:ml-4">AMPLIAR FILTRO (palabra) : </label>
-                        <input type="text" name="buscar" value="" class="bg-gray-800 border border-mi-morado text-white rounded px-3 py-1 focus:outline-none focus:ring-2 focus:ring-mi-cyan flex-grow"></input>
+                        <input type="text" name="buscar" value="" class="bg-gray-800 border border-mi-morado text-white rounded px-3 py-1 focus:outline-none focus:ring-2 focus:ring-mi-cyan flex-grow w-full sm:w-auto"></input>
                     </div>
 
-                    <input type="submit" name="filtrar" value="Filtrar" class="bg-mi-cyan hover:bg-teal-400 text-gray-900 font-bold py-1 px-6 rounded cursor-pointer transition-colors duration-200">
+                    <input type="submit" name="filtrar" value="Filtrar" class="bg-mi-cyan hover:bg-teal-400 text-gray-900 font-bold py-1 px-6 rounded cursor-pointer transition-colors duration-200 w-full sm:w-auto">
                 </div>
             </fieldset>
         </form>
 
-        <div class="overflow-x-auto">
+        <div class="w-full overflow-x-auto">
             <?php
 
             require_once __DIR__ . '/RSSElPais.php';
@@ -80,14 +80,14 @@
                 while ($arrayFiltro = mysqli_fetch_array($filtrar)) {
 
                     echo "<tr class='hover:bg-gray-800 transition-colors'>";
-                    echo "<th class='border border-mi-morado p-3 font-normal text-left align-top'>" . $arrayFiltro['titulo'] . "</th>";
-                    echo "<th class='border border-mi-morado p-3 font-normal text-left align-top text-sm'>" . $arrayFiltro['contenido'] . "</th>";
-                    echo "<th class='border border-mi-morado p-3 font-normal text-left align-top text-sm'>" . $arrayFiltro['descripcion'] . "</th>";
-                    echo "<th class='border border-mi-morado p-3 font-normal text-center align-top whitespace-nowrap'>" . $arrayFiltro['categoria'] . "</th>";
-                    echo "<th class='border border-mi-morado p-3 font-normal text-center align-top text-mi-cyan underline break-all'><a href='" . $arrayFiltro['link'] . "' target='_blank'>Ir a noticia</a></th>";
+                    echo "<th class='border border-mi-morado p-2 font-normal text-left align-top text-sm break-words'>" . $arrayFiltro['titulo'] . "</th>";
+                    echo "<th class='border border-mi-morado p-2 font-normal text-left align-top text-xs break-words'>" . $arrayFiltro['contenido'] . "</th>";
+                    echo "<th class='border border-mi-morado p-2 font-normal text-left align-top text-xs break-words'>" . $arrayFiltro['descripcion'] . "</th>";
+                    echo "<th class='border border-mi-morado p-2 font-normal text-center align-top text-sm'>" . $arrayFiltro['categoria'] . "</th>";
+                    echo "<th class='border border-mi-morado p-2 font-normal text-center align-top text-mi-cyan underline text-xs break-all'><a href='" . $arrayFiltro['link'] . "' target='_blank'>" . $arrayFiltro['link'] . "</a></th>";
                     $fecha = date_create($arrayFiltro['fPubli']);
                     $fechaConversion = date_format($fecha, 'd-M-Y');
-                    echo "<th class='border border-mi-morado p-3 font-normal text-center align-top whitespace-nowrap'>" . $fechaConversion . "</th>";
+                    echo "<th class='border border-mi-morado p-2 font-normal text-center align-top whitespace-nowrap text-sm'>" . $fechaConversion . "</th>";
                     echo "</tr>";
                 }
             }
@@ -98,15 +98,15 @@
                 printf("Conexión fallida");
             } else {
 
-                echo "<table class='w-full border-collapse border-4 border-mi-morado shadow-2xl bg-gray-900/50 text-gray-300'>";
+                echo "<table class='w-full border-collapse border-4 border-mi-morado shadow-2xl bg-gray-900/50 text-gray-300 table-fixed'>";
                 
                 echo "<tr class='bg-gray-800'>";
-                echo "<th class='p-4 text-mi-cyan border border-mi-morado text-lg'>TITULO</th>";
-                echo "<th class='p-4 text-mi-cyan border border-mi-morado text-lg'>CONTENIDO</th>";
-                echo "<th class='p-4 text-mi-cyan border border-mi-morado text-lg'>DESCRIPCIÓN</th>";
-                echo "<th class='p-4 text-mi-cyan border border-mi-morado text-lg'>CATEGORÍA</th>";
-                echo "<th class='p-4 text-mi-cyan border border-mi-morado text-lg'>ENLACE</th>";
-                echo "<th class='p-4 text-mi-cyan border border-mi-morado text-lg'>FECHA</th>";
+                echo "<th class='p-3 text-mi-cyan border border-mi-morado text-base w-[15%]'>TITULO</th>";
+                echo "<th class='p-3 text-mi-cyan border border-mi-morado text-base w-[25%]'>CONTENIDO</th>";
+                echo "<th class='p-3 text-mi-cyan border border-mi-morado text-base w-[25%]'>DESCRIPCIÓN</th>";
+                echo "<th class='p-3 text-mi-cyan border border-mi-morado text-base w-[10%]'>CATEGORÍA</th>";
+                echo "<th class='p-3 text-mi-cyan border border-mi-morado text-base w-[15%]'>ENLACE</th>";
+                echo "<th class='p-3 text-mi-cyan border border-mi-morado text-base w-[10%]'>FECHA</th>";
                 echo "</tr>";
 
 
@@ -123,58 +123,52 @@
 
                     if ($cat == "" && $f == "" && $palabra == "") {
                         $sql = "SELECT * FROM " . $periodicosMin . " ORDER BY fPubli desc";
-
                         filtros($sql, $link);
                     }
 
 
                     if ($cat != "" && $f == "" && $palabra == "") {
                         $sql = "SELECT * FROM " . $periodicosMin . " WHERE categoria LIKE '%$cat%'";
-
                         filtros($sql, $link);
                     }
 
 
                     if ($cat == "" && $f != "" && $palabra == "") {
                         $sql = "SELECT * FROM " . $periodicosMin . " WHERE fPubli='$f'";
-
                         filtros($sql, $link);
                     }
 
                     if ($cat != "" && $f != "" && $palabra == "") {
                         $sql = "SELECT * FROM " . $periodicosMin . " WHERE categoria LIKE '%$cat%' and fPubli='$f'";
-
                         filtros($sql, $link);
                     }
 
 
                     if ($cat != "" && $f != "" && $palabra != "") {
                         $sql = "SELECT * FROM " . $periodicosMin . " WHERE descripcion LIKE '%$palabra%' and categoria LIKE '%$cat%' and fPubli='$f'";
-
                         filtros($sql, $link);
                     }
+
 
                     if ($cat != "" && $f == "" && $palabra != "") {
                         $sql = "SELECT * FROM " . $periodicosMin . " WHERE descripcion LIKE '%$palabra%' and categoria LIKE '%$cat%'";
-
                         filtros($sql, $link);
                     }
+
 
                     if ($cat == "" && $f != "" && $palabra != "") {
                         $sql = "SELECT * FROM " . $periodicosMin . " WHERE descripcion LIKE '%$palabra%' and fPubli='$f'";
-
                         filtros($sql, $link);
                     }
 
+
                     if ($palabra != "" && $cat == "" && $f == "") {
                         $sql = "SELECT * FROM " . $periodicosMin . " WHERE descripcion LIKE '%$palabra%' ";
-
                         filtros($sql, $link);
                     }
                 } else {
 
                     $sql = "SELECT * FROM elpais ORDER BY fPubli desc";
-
                     filtros($sql, $link);
                 }
             }
@@ -182,6 +176,9 @@
             echo "</table>";
 
             ?>
-        </div> </div> </body>
+        </div>
+    </div>
+
+</body>
 
 </html>
