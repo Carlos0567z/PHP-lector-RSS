@@ -1,18 +1,10 @@
 <?php
 require_once __DIR__ . '/conexionBBDD.php';
 
-function limpiarTexto($texto, $limite = 150) {
-    $textoLimpio = strip_tags($texto);
-    if (strlen($textoLimpio) > $limite) {
-        $textoLimpio = substr($textoLimpio, 0, $limite) . "...";
-    }
-    return $textoLimpio;
-}
-
-$sqlMundo = "SELECT * FROM elmundo ORDER BY fPubli DESC, cod DESC";
+$sqlMundo = "SELECT * FROM elmundo ORDER BY fPubli DESC ";
 $resMundo = mysqli_query($link, $sqlMundo);
 
-$sqlPais = "SELECT * FROM elpais ORDER BY fPubli DESC, cod DESC";
+$sqlPais = "SELECT * FROM elpais ORDER BY fPubli DESC";
 $resPais = mysqli_query($link, $sqlPais);
 ?>
 
@@ -20,114 +12,121 @@ $resPais = mysqli_query($link, $sqlPais);
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Noticias RSS</title>
+    <title>Noticias - Tablas</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 font-sans leading-normal tracking-normal">
+<body class="bg-gray-50 text-gray-800 font-sans">
 
-    <nav class="bg-blue-900 p-4 shadow-lg text-white sticky top-0 z-50">
+    <nav class="bg-slate-800 p-4 shadow-md mb-8">
         <div class="container mx-auto flex justify-between items-center">
-            <h1 class="text-2xl font-bold"> Agregador de Noticias</h1>
-            <div class="text-sm">PHP + MySQL + Tailwind</div>
+            <div class="text-white font-bold text-xl">📡 Mis Noticias RSS</div>
+            <div class="space-x-4">
+                <a href="#elmundo" class="text-gray-300 hover:text-white hover:underline transition">El Mundo</a>
+                <a href="#elpais" class="text-gray-300 hover:text-white hover:underline transition">El País</a>
+                <a href="index.php" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded text-sm transition">Recargar</a>
+            </div>
         </div>
     </nav>
 
-    <div class="container mx-auto px-4 py-8">
+    <div class="container mx-auto px-4 pb-12">
 
-        <div class="mb-12">
-            <h2 class="text-3xl font-bold text-blue-800 mb-6 border-b-4 border-blue-500 inline-block pb-2">
-                El Mundo
-            </h2>
+        <div id="elmundo" class="mb-12">
+            <h2 class="text-2xl font-bold mb-4 text-cyan-700 border-b pb-2">Noticias: El Mundo</h2>
             
-            <?php if (mysqli_num_rows($resMundo) > 0): ?>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <?php while($row = mysqli_fetch_assoc($resMundo)): ?>
-                        <div class="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden flex flex-col h-full">
-                            <div class="p-5 flex-grow">
-                                <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">
-                                    <?php echo htmlspecialchars($row['categoria'] ?: '[General]'); ?>
+            <div class="overflow-x-auto shadow-lg rounded-lg border border-gray-200 bg-white">
+                <table class="w-full table-auto text-left text-sm">
+                    <thead class="bg-gray-100 uppercase text-gray-600 font-bold">
+                        <tr>
+                            <th class="px-6 py-3 border-b">Fecha</th>
+                            <th class="px-6 py-3 border-b">Categoría</th>
+                            <th class="px-6 py-3 border-b">Título y Descripción</th>
+                            <th class="px-6 py-3 border-b text-center">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <?php while($row = mysqli_fetch_assoc($resMundo)): ?>
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            
+                            <td class="px-6 py-4 whitespace-nowrap text-gray-500">
+                                <?php echo date("d/m/Y", strtotime($row['fPubli'])); ?>
+                            </td>
+
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="bg-cyan-100 text-cyan-800 px-2 py-1 rounded text-xs font-semibold">
+                                    <?php echo $row['categoria']; ?>
                                 </span>
-                                
-                                <h3 class="mt-3 text-lg font-bold text-gray-900 leading-tight">
-                                    <a href="<?php echo $row['link']; ?>" target="_blank" class="hover:text-blue-600">
-                                        <?php echo $row['titulo']; ?>
-                                    </a>
-                                </h3>
+                            </td>
 
-                                <p class="text-gray-400 text-sm mt-1 mb-3">
-                                     <?php echo date("d/m/Y", strtotime($row['fPubli'])); ?>
-                                </p>
+                            <td class="px-6 py-4">
+                                <div class="font-bold text-gray-900 text-base mb-1">
+                                    <?php echo $row['titulo']; ?>
+                                </div>
+                                <div class="text-gray-500 text-xs">
+                                    <?php echo substr(strip_tags($row['descripcion']), 0, 120) . "..."; ?>
+                                </div>
+                            </td>
 
-                                <p class="text-gray-600 text-sm">
-                                    <?php echo limpiarTexto($row['descripcion']); ?>
-                                </p>
-                            </div>
-
-                            <div class="bg-gray-50 px-5 py-3 border-t border-gray-100">
-                                <a href="<?php echo $row['link']; ?>" target="_blank" class="text-blue-600 font-semibold hover:text-blue-800 text-sm uppercase">
-                                    Leer noticia &rarr;
+                            <td class="px-6 py-4 text-center">
+                                <a href="<?php echo $row['link']; ?>" target="_blank" class="text-cyan-600 hover:text-cyan-900 font-bold hover:underline">
+                                    Leer
                                 </a>
-                            </div>
-                        </div>
-                    <?php endwhile; ?>
-                </div>
-            <?php else: ?>
-                <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4" role="alert">
-                    <p>No hay noticias de El Mundo guardadas aún.</p>
-                </div>
-            <?php endif; ?>
+                            </td>
+                        </tr>
+                        <?php endwhile; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
+        <div id="elpais">
+            <h2 class="text-2xl font-bold mb-4 text-indigo-700 border-b pb-2">Noticias: El País</h2>
+            
+            <div class="overflow-x-auto shadow-lg rounded-lg border border-gray-200 bg-white">
+                <table class="w-full table-auto text-left text-sm">
+                    <thead class="bg-gray-100 uppercase text-gray-600 font-bold">
+                        <tr>
+                            <th class="px-6 py-3 border-b">Fecha</th>
+                            <th class="px-6 py-3 border-b">Categoría</th>
+                            <th class="px-6 py-3 border-b">Título y Descripción</th>
+                            <th class="px-6 py-3 border-b text-center">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <?php while($row = mysqli_fetch_assoc($resPais)): ?>
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            
+                            <td class="px-6 py-4 whitespace-nowrap text-gray-500">
+                                <?php echo date("d/m/Y", strtotime($row['fPubli'])); ?>
+                            </td>
 
-        <div>
-            <h2 class="text-3xl font-bold text-gray-800 mb-6 border-b-4 border-gray-500 inline-block pb-2">
-                El País
-            </h2>
-
-            <?php if (mysqli_num_rows($resPais) > 0): ?>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <?php while($row = mysqli_fetch_assoc($resPais)): ?>
-                        <div class="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden flex flex-col h-full">
-                            <div class="p-5 flex-grow">
-                                <span class="bg-gray-200 text-gray-800 text-xs font-semibold px-2.5 py-0.5 rounded">
-                                    <?php echo htmlspecialchars($row['categoria'] ?: '[General]'); ?>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="bg-indigo-100 text-indigo-800 px-2 py-1 rounded text-xs font-semibold">
+                                    <?php echo $row['categoria']; ?>
                                 </span>
-                                
-                                <h3 class="mt-3 text-lg font-bold text-gray-900 leading-tight">
-                                    <a href="<?php echo $row['link']; ?>" target="_blank" class="hover:text-gray-600">
-                                        <?php echo $row['titulo']; ?>
-                                    </a>
-                                </h3>
+                            </td>
 
-                                <p class="text-gray-400 text-sm mt-1 mb-3">
-                                    <?php echo date("d/m/Y", strtotime($row['fPubli'])); ?>
-                                </p>
+                            <td class="px-6 py-4">
+                                <div class="font-bold text-gray-900 text-base mb-1">
+                                    <?php echo $row['titulo']; ?>
+                                </div>
+                                <div class="text-gray-500 text-xs">
+                                    <?php echo substr(strip_tags($row['descripcion']), 0, 120) . "..."; ?>
+                                </div>
+                            </td>
 
-                                <p class="text-gray-600 text-sm">
-                                    <?php echo limpiarTexto($row['descripcion']); ?>
-                                </p>
-                            </div>
-                            <div class="bg-gray-50 px-5 py-3 border-t border-gray-100">
-                                <a href="<?php echo $row['link']; ?>" target="_blank" class="text-gray-700 font-semibold hover:text-black text-sm uppercase">
-                                    Leer noticia &rarr;
+                            <td class="px-6 py-4 text-center">
+                                <a href="<?php echo $row['link']; ?>" target="_blank" class="text-indigo-600 hover:text-indigo-900 font-bold hover:underline">
+                                    Leer
                                 </a>
-                            </div>
-                        </div>
-                    <?php endwhile; ?>
-                </div>
-            <?php else: ?>
-                <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4" role="alert">
-                    <p>No hay noticias de El País guardadas aún.</p>
-                </div>
-            <?php endif; ?>
+                            </td>
+                        </tr>
+                        <?php endwhile; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
     </div>
-
-    <footer class="bg-white border-t mt-12 py-8 text-center text-gray-500 text-sm">
-        <p>Proyecto RSS con PHP y Tailwind</p>
-    </footer>
 
 </body>
 </html>
